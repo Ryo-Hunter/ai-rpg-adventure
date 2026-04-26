@@ -113,6 +113,24 @@
     }
     .points-remaining span { color: #fff; }
 
+    .world-select { margin-bottom: 20px; }
+    .world-select .stat-label { margin-bottom: 10px; }
+    .world-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+    .world-btn {
+      flex: 1;
+      background: #000;
+      border: 1px solid #444;
+      color: #888;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 10px 0;
+      cursor: pointer;
+      text-align: center;
+    }
+    .world-btn:hover { border-color: #888; color: #ccc; }
+    .world-btn.selected { border-color: #fff; color: #fff; }
+
     /* ── 遊戲畫面 ── */
     #game-screen { display: none; }
 
@@ -335,6 +353,14 @@
         <label>AI 名字</label>
         <input type="text" id="ai-name" placeholder="輸入 AI 名字" maxlength="10">
       </div>
+      <div class="world-select">
+        <div class="stat-label">世界觀</div>
+        <div class="world-btns">
+          <button class="world-btn" id="w-fantasy" onclick="selectWorld('fantasy')">◆ 奇幻</button>
+          <button class="world-btn" id="w-modern" onclick="selectWorld('modern')">◆ 現代</button>
+          <button class="world-btn" id="w-scifi" onclick="selectWorld('scifi')">◆ 科幻</button>
+        </div>
+      </div>
       <button class="dice-btn" id="dice-btn" onclick="rollDice()">⚄ 擲骰子</button>
       <div class="dice-result" id="dice-result"></div>
     </div>
@@ -417,7 +443,7 @@
 <script>
 // ── 場景資料 ────────────────────────────────────────────────
 
-const SCENES = {
+const WORLDS = { fantasy: {
   s1: {
     幕: 1,
     text: `你抵達森林邊界的酒館時，午後的光線讓木頭地板染成橘色。
@@ -664,7 +690,415 @@ const SCENES = {
     choices: null,
     ending: "retreat"
   }
-};
+}, // ── end fantasy
+
+modern: {
+  s1: {
+    幕: 1,
+    text: `深夜的停車場 B2，燈管有一根壞了，忽明忽滅。
+
+你走向自己的車，發現隔壁那輛的側門大開。一個女生坐在駕駛座，頭低著，手機螢幕的光打在她臉上。她沒有發動車子，也沒有要走的意思。
+
+廊道另一端，一個男人靠著牆，目光一直往那輛車的方向飄。看見你走過來，他把手插回口袋，但沒有離開。`,
+    choices: {
+      A: { text: "走向那輛車，敲車窗", next: "s2a" },
+      B: { text: "走向那個男人", next: "s2b" },
+      C: { text: "假裝找車，繞到能看清兩邊的位置", next: "s2c" }
+    }
+  },
+
+  s2a: {
+    幕: 2,
+    text: `你敲了兩下車窗。
+
+女生抬起頭，手機螢幕滅了。她猶豫了一秒，把車窗搖下一條縫。
+
+「你還好嗎？」
+
+她沒有立刻回答。視線往廊道那個男人的方向飄了一眼，然後回到你臉上。「我在等人。」她說，聲音很平，但手指在方向盤上收緊了。`,
+    choices: {
+      A: { text: "「需要我陪你等嗎？」", next: "s3a" },
+      B: { text: "「那個人——你認識他嗎？」指向靠牆的男人", next: "s3b" },
+      C: { text: "「你朋友快到了嗎？我可以站在這裡直到他們來。」", next: "s3a" }
+    }
+  },
+
+  s2b: {
+    幕: 2,
+    text: `男人看見你走過來，肩膀輕微繃緊。
+
+「我在等人。」他先開口，語氣平靜，像是準備好的答案。
+
+你沒有說話，只是停在他旁邊，跟他一起看著那個方向。停了幾秒，他開口：「你認識她？」
+
+「不認識。」你說。「你呢？」
+
+他沒有回答。`,
+    choices: {
+      A: { text: "繼續沉默，等他先說", next: "s3b" },
+      B: { text: "「如果你認識她，你應該去跟她說話，不是站在這裡。」", next: "s3b" },
+      C: { text: "轉身走向那輛車", next: "s3a" }
+    }
+  },
+
+  s2c: {
+    幕: 2,
+    text: `你找了一根柱子，兩邊都看得見。
+
+女生沒有睡——她的手在動，是在發訊息。畫面很亮，表情介於專注和緊張之間。
+
+那個男人沒有再看那輛車了。他的視線移向電梯口，在等什麼人下來。
+
+電梯燈亮了，數字開始倒數。`,
+    choices: {
+      A: { text: "走到女生車旁，讓她看見你在這裡", next: "s3a" },
+      B: { text: "走到男人和電梯之間", next: "s3b" },
+      C: { text: "繼續等，看電梯裡出來的是誰", next: "s3c" }
+    }
+  },
+
+  s3a: {
+    幕: 3,
+    text: `女生終於說了。
+
+「他是我前男友。」她盯著方向盤。「我換了號碼，他不知道我怎麼找到這裡的。」
+
+她停了一下：「我已經報過警了，但警察說他沒有做出違法行為。我不知道該怎麼辦。」
+
+車窗外，那個男人還站在原位。`,
+    choices: {
+      A: { text: "「我送你出去，你的車跟著我走。」", next: "s4a" },
+      B: { text: "「我去跟他說話。你先發動車子。」", next: "s4b" },
+      C: { text: "「你朋友快到了嗎？我站在這裡陪你等。」", next: "s4a" }
+    }
+  },
+
+  s3b: {
+    幕: 3,
+    text: `男人沉默了一會兒，才開口。
+
+「那是我前妻。」他的聲音很低。「法院判了我每個月有兩次探視權，但她每次都不讓我見孩子。」
+
+他看著那輛車的方向：「我不是在跟蹤她。我只是……想知道孩子還好嗎。」
+
+你沉默了一秒。這個故事和你原本預設的不一樣。`,
+    choices: {
+      A: { text: "去告訴女生他說的話，讓她決定", next: "s4b" },
+      B: { text: "「你有律師嗎？這應該用法律途徑，不是停車場。」", next: "s4b" },
+      C: { text: "「孩子在哪？」", next: "s4c" }
+    }
+  },
+
+  s3c: {
+    幕: 3,
+    text: `電梯門開了。
+
+走出來的是一個中年男人，皮夾克，手插口袋。他掃了一眼靠牆那個人，然後視線落在你身上——停了三秒。
+
+靠牆的男人往前走了一步。兩個人用眼神交換了什麼。
+
+你看見靠牆那個人把手從口袋裡拿出來，手心朝上，是空的——刻意讓你看見是空的。`,
+    choices: {
+      A: { text: "走到兩人和那輛車中間", next: "s4b" },
+      B: { text: "掏出手機，開始錄影", next: "s4a" },
+      C: { text: "大聲說：「這裡有監視器。」", next: "s4a" }
+    }
+  },
+
+  s4a: {
+    幕: 4,
+    text: `女生把車發動了。
+
+她的車燈亮起，男人走近了兩步，在她車旁停下來，隔著車窗說了什麼——你聽不清楚，但她的臉沉下去了。
+
+她沒有開走。
+
+你走過去，站在男人和車窗之間。`,
+    choices: {
+      A: { text: "「讓開。」不解釋，就這兩個字", next: "s5_direct" },
+      B: { text: "「她要走了。如果你有話說，去找律師。」", next: "s5_talk" },
+      C: { text: "對女生說：「妳要走就走，我跟著你到出口。」", next: "s5_escort" }
+    }
+  },
+
+  s4b: {
+    幕: 4,
+    text: `你把兩邊的話都說了。
+
+女生聽完，很久沒有說話。然後她把車窗完全搖下來。
+
+「孩子在後座。」她說，聲音很輕。「他睡著了。」
+
+男人聽見這句話，往車子方向走了一步，然後停住了。他站在那裡，沒有繼續走，也沒有後退。`,
+    choices: {
+      A: { text: "讓他去看一眼孩子，你站在旁邊", next: "s5_peace" },
+      B: { text: "「今晚到這裡為止。你們都需要冷靜。」", next: "s5_talk" },
+      C: { text: "退後一步，讓他們自己決定", next: "s5_peace" }
+    }
+  },
+
+  s4c: {
+    幕: 4,
+    text: `男人愣了一下。
+
+「在她車裡，睡著了。」他說，聲音裂開了一點。「我上個月生日，她說孩子生病了，取消了探視。我不知道是不是真的。」
+
+你看向那輛車。後座玻璃有點霧——有人在裡面呼吸。`,
+    choices: {
+      A: { text: "走向那輛車，輕輕敲後座車窗", next: "s5_peace" },
+      B: { text: "告訴女生：「他只是想確認孩子還好。」", next: "s5_peace" },
+      C: { text: "「你們兩個人的事，要在孩子睡著的停車場解決嗎？」", next: "s5_talk" }
+    }
+  },
+
+  s5_direct: {
+    幕: 5,
+    text: `男人看了你很長一段時間。
+
+你沒有移開視線。
+
+他最後後退了一步。女生的車緩緩開出車位，往出口方向去。你目送車燈消失在轉角。
+
+男人還站在那裡。你不知道接下來他會怎麼做，但今晚到這裡為止。`,
+    choices: null,
+    ending: "direct"
+  },
+
+  s5_talk: {
+    幕: 5,
+    text: `那幾句話讓空氣靜下來了。
+
+男人坐到停車場的水泥墩上，掌心捂著臉。女生的車還停在那裡，引擎還開著，但她沒有走。
+
+你站在中間，什麼都沒有說。
+
+有些事不是今晚能解決的。但今晚沒有人受傷。`,
+    choices: null,
+    ending: "talk"
+  },
+
+  s5_escort: {
+    幕: 5,
+    text: `你走在女生車子旁邊，一路走到出口坡道。
+
+男人跟了幾步，然後停下來。
+
+她的車窗搖下來一條縫：「謝謝你。」
+
+你目送她的車燈消失在地下室出口的亮光裡。回頭，男人已經不見了。停車場重新安靜下來。`,
+    choices: null,
+    ending: "escort"
+  },
+
+  s5_peace: {
+    幕: 5,
+    text: `男人站在後座車窗旁，看著裡面睡著的孩子，沒有說話。
+
+女生坐在駕駛座，沒有看他。
+
+大概一分鐘，男人後退了一步，把手放下來。「我走了。」他說。
+
+沒有人回應他。他走向電梯，按下按鈕，消失在門縫裡。
+
+你和女生都沒有動，直到電梯關上的聲音響了。`,
+    choices: null,
+    ending: "peace"
+  }
+}, // ── end modern
+
+scifi: {
+  s1: {
+    幕: 1,
+    text: `你收到一條匿名訊息——座標加一句話：「他們找到伺服器了。快來。」
+
+抵達第七區地下維修通道時，只有緊急照明在運作。管線沿牆排列，空氣帶著冷卻液的氣味。根據地圖，伺服器室在左側通道盡頭。
+
+右側傳來聲音。低頻的說話聲和設備運作聲混在一起，至少兩個人。`,
+    choices: {
+      A: { text: "直接往左走，先找到伺服器", next: "s2a" },
+      B: { text: "靠近右側，確認那些人是誰", next: "s2b" },
+      C: { text: "關掉手電筒，原地不動，先聽清楚", next: "s2c" }
+    }
+  },
+
+  s2a: {
+    幕: 2,
+    text: `伺服器室的門虛掩著——有人來過了。
+
+主機指示燈閃爍異常，你連上診斷終端，看見一條連線記錄：遠端存取，三分鐘前開始，仍在進行中。
+
+有人正在從另一個地方讀取這台機器的資料。`,
+    choices: {
+      A: { text: "立刻拔掉網路線，切斷遠端連線", next: "s3a" },
+      B: { text: "插上隨身碟，搶先把資料提取出來", next: "s3b" },
+      C: { text: "順著連線追查是誰在存取", next: "s3a" }
+    }
+  },
+
+  s2b: {
+    幕: 2,
+    text: `你靠著牆，慢慢走近。
+
+兩個人的聲音：「上面說的是抹除，你照做就好。」
+
+另一個停頓了一下：「那台機器裡有人的定位資料。抹除了，那些人就找不回來了。」
+
+「這不是我們的問題。」
+
+腳步聲，往左側移動的方向——他們先你一步，朝伺服器室走去。`,
+    choices: {
+      A: { text: "跟上去，在他們動手之前攔住", next: "s3c" },
+      B: { text: "繞另一條路，搶先進伺服器室", next: "s3b" },
+      C: { text: "繼續待在原地，等他們進去再行動", next: "s3a" }
+    }
+  },
+
+  s2c: {
+    幕: 2,
+    text: `黑暗中，聲音清晰了。
+
+「抹除記錄，不留痕跡。」「那些人的定位資料也一起清掉。」
+
+兩個人，腳步聲往左移——往伺服器室的方向。
+
+他們知道目標在哪。你比他們晚到，但他們還沒有動手。`,
+    choices: {
+      A: { text: "繞路搶先進伺服器室，他們到之前完成提取", next: "s3b" },
+      B: { text: "跟著他們，在他們開始動作時介入", next: "s3c" },
+      C: { text: "找到電力控制箱，切斷這層的電源", next: "s3a" }
+    }
+  },
+
+  s3a: {
+    幕: 3,
+    text: `你知道的夠多了：有人的位置資料被存在這台伺服器，有人要讓這些人從系統裡消失。
+
+走廊裡，兩個人的腳步聲停了。伺服器室的門在你前面，他們就在門後。`,
+    choices: {
+      A: { text: "推開門，直接開口", next: "s4b" },
+      B: { text: "製造聲響，把他們引出來，在走廊裡攔截", next: "s4a" },
+      C: { text: "找到主電力開關，切斷整層電源", next: "s4a" }
+    }
+  },
+
+  s3b: {
+    幕: 3,
+    text: `你進了伺服器室，插上隨身碟，提取開始。
+
+進度條：18%
+
+走廊傳來腳步聲。兩個人，越來越近。
+
+進度條：31%
+
+門把轉動了。`,
+    choices: {
+      A: { text: "站到門後，等他們進來", next: "s4a" },
+      B: { text: "把設備拉離牆壁，切斷他們能操控的角度", next: "s4a" },
+      C: { text: "不動，繼續等提取完成，直到被發現", next: "s4b" }
+    }
+  },
+
+  s3c: {
+    幕: 3,
+    text: `你跟著他們進了伺服器室。
+
+兩人轉過頭，對上你。沉默了三秒。
+
+其中一個往設備那側移動，另一個向你走來。`,
+    choices: {
+      A: { text: "「你們要抹除的那些人，知道自己會消失嗎？」", next: "s4b" },
+      B: { text: "什麼都不說，走到設備和他們中間，擋住", next: "s4a" },
+      C: { text: "「我只是來修管線的。」裝作不知情", next: "s4b" }
+    }
+  },
+
+  s4a: {
+    幕: 4,
+    text: `對峙。
+
+其中一個繞開你往設備走，你擋住他，推開，他撞上牆架，設備跟著震了一下。
+
+另一個手放在電源開關上，等著你分心。
+
+你同時只能擋一個。`,
+    choices: {
+      A: { text: "頂住靠近你的那個，讓提取繼續跑", next: "s5_force" },
+      B: { text: "側身讓開，讓他的力道落空，然後鎖住他", next: "s5_smart" },
+      C: { text: "對著走廊大喊：「這裡有人！」", next: "s5_noise" }
+    }
+  },
+
+  s4b: {
+    幕: 4,
+    text: `其中一個人停下來了。
+
+他站在設備旁邊，手沒有動。另一個用眼神催他，他沒有看。
+
+你有一次開口的機會。`,
+    choices: {
+      A: { text: "「這些資料刪了，那些人真的就消失了。你確定這是你要的？」", next: "s5_convince" },
+      B: { text: "「告訴我是誰下的命令。我不追究你。」", next: "s5_convince" },
+      C: { text: "插上隨身碟，進度條開始跑——讓他看見", next: "s5_smart" }
+    }
+  },
+
+  s5_force: {
+    幕: 5,
+    text: `你擋住了他。
+
+設備沒有被切斷，提取完成了。他們走的時候，其中一個在門口回頭看了你一眼，沒有說話。
+
+你握著隨身碟站在空蕩蕩的伺服器室裡。
+
+裡面存著幾個人的下落，那些人還不知道有人剛剛替他們做了決定。`,
+    choices: null,
+    ending: "force"
+  },
+
+  s5_smart: {
+    幕: 5,
+    text: `你比他們快一步。
+
+設備被移開，遠端連線中斷。他們沒拿到完整資料，你也只拿到一半。
+
+他們走了。你站在昏暗的伺服器室，看著進度條停在 61%。
+
+夠不夠用，你現在不知道。但那些人今晚不會消失。`,
+    choices: null,
+    ending: "smart"
+  },
+
+  s5_noise: {
+    幕: 5,
+    text: `有人跑來了——另一個技術員，聽見動靜過來查看。
+
+那兩個人消失在走廊盡頭。
+
+你站在完好的伺服器前，技術員看著你：「你是誰？」
+
+你沒有立刻回答。設備完好，資料完整，但你現在需要一個說得過去的理由。`,
+    choices: null,
+    ending: "noise"
+  },
+
+  s5_convince: {
+    幕: 5,
+    text: `猶豫的那個人把設備的電源關掉了。
+
+不是你要的動作——但他讓遠端連線斷了。
+
+他看著你說：「我不知道你是誰。我也沒有在這裡見過你。」
+
+然後走了。
+
+剩你一個人，還有一台斷電的伺服器，和一個你沒有預期到的結局。`,
+    choices: null,
+    ending: "convince"
+  }
+}
+
+}; // ── end WORLDS
 
 // ── 稱號計算 ─────────────────────────────────────────────────
 
@@ -708,9 +1142,17 @@ let G = {
   playerName: "", aiName: "",
   playerStats: {}, aiStats: {},
   playerPoints: 0, aiPoints: 0,
+  world: "",
   currentScene: "s1",
   alignCount: 0, divergeCount: 0, divergeAtKey: false
 };
+
+function selectWorld(w) {
+  G.world = w;
+  ["fantasy","modern","scifi"].forEach(id => {
+    document.getElementById("w-" + id).classList.toggle("selected", id === w);
+  });
+}
 
 // ── 擲骰子 ───────────────────────────────────────────────────
 
@@ -718,6 +1160,7 @@ function rollDice() {
   const pName = document.getElementById("player-name").value.trim();
   const aName = document.getElementById("ai-name").value.trim();
   if (!pName || !aName) { alert("請先輸入名字"); return; }
+  if (!G.world) { alert("請先選擇世界觀"); return; }
 
   const btn = document.getElementById("dice-btn");
   btn.disabled = true;
@@ -790,6 +1233,7 @@ function startGame() {
   };
   G.currentScene = "s1";
   G.alignCount = 0; G.divergeCount = 0; G.divergeAtKey = false;
+  G.firstScene = true;
 
   document.getElementById("setup-screen").style.display = "none";
   document.getElementById("game-screen").style.display = "block";
@@ -808,7 +1252,7 @@ function startGame() {
 }
 
 function renderScene(id) {
-  const scene = SCENES[id];
+  const scene = WORLDS[G.world][id];
   G.currentScene = id;
 
   document.getElementById("progress-text").textContent = `幕 ${scene.幕} / 5`;
@@ -847,7 +1291,7 @@ let pendingConfirm = null; // { who: "player"|"ai", choice: "A"|"B"|"C" }
 
 function showConfirm(who, choice) {
   pendingConfirm = { who, choice };
-  const scene = SCENES[G.currentScene];
+  const scene = WORLDS[G.world][G.currentScene];
   const isFirst = scene.幕 === 1 && who === "player";
   const name = who === "player" ? G.playerName : G.aiName;
   const bar = document.getElementById("confirm-bar");
@@ -897,7 +1341,7 @@ function cancelChoice() {
 }
 
 function copyScene() {
-  const scene = SCENES[G.currentScene];
+  const scene = WORLDS[G.world][G.currentScene];
   const ps = G.playerStats, as = G.aiStats;
   const charBlock =
     `【角色】\n` +
@@ -920,7 +1364,7 @@ function submitChoice() {
   const aChoice = document.getElementById("ai-select").value;
   if (!pChoice || !aChoice) return;
 
-  const scene = SCENES[G.currentScene];
+  const scene = WORLDS[G.world][G.currentScene];
   const aligned = pChoice === aChoice;
   const fb = document.getElementById("feedback");
 
@@ -970,8 +1414,11 @@ function restartGame() {
   document.getElementById("setup-page2").style.display = "none";
   document.getElementById("dice-btn").disabled = false;
   document.getElementById("dice-result").innerHTML = "";
+  ["fantasy","modern","scifi"].forEach(id => {
+    document.getElementById("w-" + id).classList.remove("selected");
+  });
   G = { playerName:"", aiName:"", playerStats:{}, aiStats:{},
-        playerPoints:0, aiPoints:0,
+        playerPoints:0, aiPoints:0, world:"",
         currentScene:"s1", alignCount:0, divergeCount:0, divergeAtKey:false };
 }
 </script>
