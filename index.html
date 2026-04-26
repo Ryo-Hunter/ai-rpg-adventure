@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RPG ADVENTURE</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      color: #c8c8c8;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #app { width: 100%; max-width: 700px; }
+
+    /* ── 開始畫面 ── */
+    #setup-screen { border: 1px solid #444; padding: 40px; }
+    #setup-page2 { display: none; }
+
+    .title {
+      color: #fff;
+      font-size: 18px;
+      letter-spacing: 4px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .input-group { margin-bottom: 20px; }
+
+    label { display: block; color: #888; margin-bottom: 6px; font-size: 13px; }
+
+    input[type="text"] {
+      background: #000;
+      border: 1px solid #444;
+      color: #c8c8c8;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 8px 12px;
+      width: 100%;
+    }
+    input[type="text"]:focus { outline: none; border-color: #888; }
+
+    .stat-section { margin-top: 20px; }
+    .stat-label { color: #888; font-size: 13px; margin-bottom: 10px; }
+    .stat-inputs { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .stat-item { display: flex; align-items: center; gap: 8px; }
+    .stat-item label { margin: 0; white-space: nowrap; }
+
+    input[type="number"] {
+      background: #000;
+      border: 1px solid #444;
+      color: #c8c8c8;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 6px 8px;
+      width: 52px;
+      text-align: center;
+    }
+    input[type="number"]:focus { outline: none; border-color: #888; }
+
+    .start-btn {
+      margin-top: 30px;
+      width: 100%;
+      background: #000;
+      border: 1px solid #888;
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      letter-spacing: 2px;
+      padding: 12px;
+      cursor: pointer;
+    }
+    .start-btn:hover { background: #111; border-color: #ccc; }
+
+    .dice-btn {
+      margin-top: 30px;
+      width: 100%;
+      background: #000;
+      border: 1px solid #666;
+      color: #ccc;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      letter-spacing: 2px;
+      padding: 12px;
+      cursor: pointer;
+    }
+    .dice-btn:hover { background: #111; border-color: #aaa; color: #fff; }
+    .dice-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .dice-result {
+      margin-top: 24px;
+      font-size: 13px;
+      color: #666;
+      text-align: center;
+      min-height: 20px;
+      letter-spacing: 1px;
+    }
+    .dice-result .rolled { color: #fff; font-size: 18px; }
+    .dice-result .pts { color: #888; font-size: 12px; margin-top: 6px; }
+
+    .points-remaining {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .points-remaining span { color: #fff; }
+
+    /* ── 遊戲畫面 ── */
+    #game-screen { display: none; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #444;
+      border-bottom: none;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #888;
+    }
+    .header .game-title { color: #fff; letter-spacing: 2px; }
+
+    .stats-bar {
+      border: 1px solid #444;
+      border-bottom: none;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #888;
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    .char-stats span { margin-right: 12px; }
+    .char-name { color: #ccc; margin-right: 8px; }
+
+    /* 場景框 */
+    .scene-box {
+      border: 1px solid #444;
+      padding: 20px 16px;
+      position: relative;
+      min-height: 220px;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: #000;
+      border: 1px solid #555;
+      color: #888;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .copy-btn:hover { border-color: #aaa; color: #ccc; }
+    .copy-btn.copied { color: #4caf50; border-color: #4caf50; }
+
+    .scene-text {
+      font-size: 14px;
+      line-height: 1.9;
+      color: #c8c8c8;
+      margin-top: 8px;
+      margin-bottom: 20px;
+      padding-right: 56px;
+    }
+
+    .divider { border: none; border-top: 1px solid #2a2a2a; margin: 14px 0; }
+
+    .choices { font-size: 13px; }
+    .choice-item { padding: 5px 0; color: #aaa; }
+    .choice-item span { color: #fff; margin-right: 6px; }
+
+    /* 選項列 */
+    .input-bar {
+      border: 1px solid #444;
+      border-top: none;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .select-group { display: flex; align-items: center; gap: 8px; }
+    .select-group label { color: #888; font-size: 13px; margin: 0; white-space: nowrap; }
+
+    select {
+      background: #000;
+      border: 1px solid #444;
+      color: #c8c8c8;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: #888; }
+    select:disabled { opacity: 0.25; cursor: not-allowed; }
+
+    .submit-btn {
+      margin-left: auto;
+      background: #000;
+      border: 1px solid #666;
+      color: #ccc;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 7px 20px;
+      cursor: pointer;
+    }
+    .submit-btn:hover { border-color: #aaa; color: #fff; }
+
+    /* 一致/分歧回饋 */
+    .feedback {
+      border: 1px solid #1a1a1a;
+      border-top: none;
+      padding: 8px 16px;
+      font-size: 12px;
+      text-align: center;
+      min-height: 32px;
+      color: #444;
+      letter-spacing: 1px;
+    }
+    .feedback.align { color: #4caf50; border-color: #1a2e1a; }
+    .feedback.diverge { color: #ff9800; border-color: #2e1f0a; }
+
+    /* 確認列 */
+    .confirm-bar {
+      display: none;
+      border: 1px solid #333;
+      border-top: none;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #aaa;
+      gap: 12px;
+      align-items: center;
+    }
+    .confirm-bar.visible { display: flex; }
+    .confirm-bar .warn { color: #ff9800; margin-bottom: 4px; font-size: 11px; }
+    .confirm-bar .msg { flex: 1; line-height: 1.6; }
+    .confirm-btn {
+      background: #000;
+      border: 1px solid #666;
+      color: #ccc;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 5px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .confirm-btn:hover { border-color: #aaa; color: #fff; }
+    .cancel-btn {
+      background: #000;
+      border: 1px solid #333;
+      color: #666;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 5px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .cancel-btn:hover { border-color: #666; color: #aaa; }
+
+    /* ── 結局畫面 ── */
+    #end-screen {
+      display: none;
+      border: 1px solid #444;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .end-title {
+      color: #fff;
+      font-size: 16px;
+      letter-spacing: 3px;
+      margin-bottom: 30px;
+    }
+
+    .stats-summary {
+      margin-bottom: 30px;
+      font-size: 13px;
+      color: #666;
+    }
+    .stats-summary span { color: #ccc; }
+
+    .award { margin: 20px 0; }
+    .award-name { color: #666; font-size: 12px; margin-bottom: 6px; }
+    .award-title { color: #fff; font-size: 16px; letter-spacing: 1px; margin-bottom: 8px; }
+    .award-desc { color: #666; font-size: 12px; line-height: 1.7; }
+
+    .divider-line {
+      border: none;
+      border-top: 1px solid #222;
+      margin: 24px auto;
+      width: 60%;
+    }
+
+    .restart-btn {
+      margin-top: 30px;
+      background: #000;
+      border: 1px solid #666;
+      color: #ccc;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 10px 30px;
+      cursor: pointer;
+    }
+    .restart-btn:hover { border-color: #aaa; color: #fff; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 開始畫面 -->
+  <div id="setup-screen">
+    <div class="title">◆ RPG ADVENTURE ◆</div>
+
+    <!-- 第一頁：輸入名字 + 擲骰子 -->
+    <div id="setup-page1">
+      <div class="input-group">
+        <label>你/妳的名字</label>
+        <input type="text" id="player-name" placeholder="輸入名字" maxlength="10">
+      </div>
+      <div class="input-group">
+        <label>AI 名字</label>
+        <input type="text" id="ai-name" placeholder="輸入 AI 名字" maxlength="10">
+      </div>
+      <button class="dice-btn" id="dice-btn" onclick="rollDice()">⚄ 擲骰子</button>
+      <div class="dice-result" id="dice-result"></div>
+    </div>
+
+    <!-- 第二頁：分配點數 -->
+    <div id="setup-page2">
+      <div class="stat-section">
+        <div class="points-remaining" id="p-remain"></div>
+        <div class="stat-label" id="p-stat-label">你的能力值</div>
+        <div class="stat-inputs">
+          <div class="stat-item"><label>體力</label><input type="number" id="s-p1" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>智力</label><input type="number" id="s-p2" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>武力</label><input type="number" id="s-p3" min="0" max="15" value="0" oninput="checkPoints()"></div>
+        </div>
+      </div>
+      <div class="stat-section" style="margin-top:24px">
+        <div class="points-remaining" id="a-remain"></div>
+        <div class="stat-label" id="a-stat-label">夥伴能力值</div>
+        <div class="stat-inputs">
+          <div class="stat-item"><label>智力</label><input type="number" id="s-a1" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>耐力</label><input type="number" id="s-a2" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>決策力</label><input type="number" id="s-a3" min="0" max="15" value="0" oninput="checkPoints()"></div>
+        </div>
+      </div>
+      <button class="start-btn" id="start-btn" onclick="startGame()" disabled>▶ 開始冒險</button>
+    </div>
+  </div>
+
+  <!-- 遊戲畫面 -->
+  <div id="game-screen">
+    <div class="header">
+      <span class="game-title">◆ RPG ADVENTURE ◆</span>
+      <span id="progress-text">幕 1 / 5</span>
+    </div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="scene-box">
+      <button class="copy-btn" id="copy-btn" onclick="copyScene()">複製</button>
+      <div class="scene-text" id="scene-text"></div>
+      <hr class="divider">
+      <div class="choices" id="choices"></div>
+    </div>
+    <div class="input-bar" id="input-bar">
+      <div class="select-group">
+        <label id="player-label">你：</label>
+        <select id="player-select">
+          <option value="">─</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+        </select>
+      </div>
+      <div class="select-group">
+        <label id="ai-label">夥伴：</label>
+        <select id="ai-select" disabled>
+          <option value="">─</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+        </select>
+      </div>
+      <button class="submit-btn" id="submit-btn" style="display:none" onclick="submitChoice()">送出</button>
+    </div>
+    <div class="confirm-bar" id="confirm-bar">
+      <div class="msg" id="confirm-msg"></div>
+      <button class="confirm-btn" id="confirm-yes" onclick="confirmChoice()">確認</button>
+      <button class="cancel-btn" onclick="cancelChoice()">取消</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <!-- 結局畫面 -->
+  <div id="end-screen">
+    <div class="end-title">◆ 第一章　終 ◆</div>
+    <div class="stats-summary" id="stats-summary"></div>
+    <div id="awards"></div>
+    <button class="restart-btn" onclick="restartGame()">▶ 重新開始</button>
+  </div>
+
+</div>
+<script>
+// ── 場景資料 ────────────────────────────────────────────────
+
+const SCENES = {
+  s1: {
+    幕: 1,
+    text: `你抵達森林邊界的酒館時，午後的光線讓木頭地板染成橘色。
+
+老闆娘記得那個助理——三天前，他跟一群往北走的旅人喝了一杯，之後離開了。但她補充了一句：「他臨走前把行李鎖在二樓房間。說晚上回來取。沒回來。」
+
+還沒開口問完，門外走進一個獵人，皮革外套帶著泥：「你是來找人的吧。那方向不對。」他朝東邊抬了下巴。「我在廢墟附近看到有人，跟你說的描述像。昨天下午。」
+
+二樓有鎖著的房間。北邊是旅人最後的去向。東邊廢墟是獵人的目擊地點。`,
+    choices: {
+      A: { text: "上樓，檢查鎖著的房間", next: "s2a" },
+      B: { text: "詳細問獵人在廢墟附近看到了什麼", next: "s2b" },
+      C: { text: "問老闆娘那群往北走的旅人是什麼來頭", next: "s2c" }
+    }
+  },
+
+  s2a: {
+    幕: 2,
+    text: `二樓的房間門鎖是最普通的型號，沒費多少力氣就開了。
+
+助理的行李包裡有換洗衣物、一本帳冊、以及一張折起來的紙條。
+
+紙條上只有一行字：「如果我沒有回來，把帳冊交給府城的御史大人。不要給 Aldus。」
+
+那個委託你找人的布商，就叫 Aldus。`,
+    choices: {
+      A: { text: "帶著帳冊往北追那群旅人", next: "s3a" },
+      B: { text: "先看帳冊裡寫了什麼", next: "s3b" },
+      C: { text: "下樓詢問獵人廢墟的情況", next: "s3c" }
+    }
+  },
+
+  s2b: {
+    幕: 2,
+    text: `獵人把杯子推到一旁，認真回想。
+
+「一個人，走得很快，一直回頭看。背著一個包，不大。進了廢墟東側的入口就沒再出來。」
+
+他停頓：「我今天早上回去確認了一次。廢墟外圍多了腳印，兩個人，在外面繞。不進去——在等。」
+
+等那個躲進去的人撐不住出來。`,
+    choices: {
+      A: { text: "今晚直接進廢墟帶人出來", next: "s3d" },
+      B: { text: "問老闆娘旅人的事，多收集資訊", next: "s3c" },
+      C: { text: "白天去，正面接觸廢墟外圍的人", next: "s3e" }
+    }
+  },
+
+  s2c: {
+    幕: 2,
+    text: `老闆娘想了想才開口。
+
+「那群人？大概六個。腰間的佩劍刻了同一個印記，像齒輪咬著一隻眼睛。我在這裡二十年，沒見過這個標誌。」
+
+她壓低聲音：「你那個助理，跟他們說話的時候臉色不對。他們走的時候，他走在中間。」
+
+走在中間——不是跟著走，是被夾著走。
+
+獵人在旁邊補了一句：「東邊廢墟那個人是一個人走的。很趕。」`,
+    choices: {
+      A: { text: "往北追那群有印記的人", next: "s3a" },
+      B: { text: "往東去廢墟找那個人", next: "s3d" },
+      C: { text: "查那個齒輪眼睛的標誌是什麼組織", next: "s3c" }
+    }
+  },
+
+  s3a: {
+    幕: 3,
+    text: `北邊的官道上，你追上了那群旅人的蹤跡。
+
+但追到第一個驛站時，消息斷了。驛站的人說那群人半途轉向，往山裡去了。
+
+時間浪費了。你決定回頭，重新從酒館理清線索。
+
+回程途中，你遇到了獵人——他主動找上來：「廢墟那邊有動靜。你最好快點。」`,
+    choices: {
+      A: { text: "立刻趕往廢墟", next: "s4a" },
+      B: { text: "問獵人具體是什麼動靜", next: "s4b" },
+      C: { text: "先回酒館整理思路再出發", next: "s4b" }
+    }
+  },
+
+  s3b: {
+    幕: 3,
+    text: `帳冊裡有一處被人用細線做了記號。
+
+布商 Aldus 把一批貨的收入拆成三份，用三個不同的名字分別報帳。三個名字你不認識，但數字加起來對不上。
+
+有人在查這件事——而助理意外發現了帳冊。
+
+他不是因為自己做了什麼被盯上，是因為看見了不該看見的東西。`,
+    choices: {
+      A: { text: "帶著帳冊去找助理，先救人", next: "s4a" },
+      B: { text: "查那三個名字是誰", next: "s4b" },
+      C: { text: "直接去找 Aldus 對質", next: "s4c" }
+    }
+  },
+
+  s3c: {
+    幕: 3,
+    text: `獵人把杯子往桌中間推了一下。
+
+「那個標誌叫『觀察者』。不是傭兵，不是強盜。他們收集資訊——帳目、路線、人員往來。有人付錢，他們就追。」
+
+他頓了頓：「你的助理如果被他們盯上，不是因為他做了什麼。是因為他知道了什麼。布商 Aldus 的生意，你了解多少？」
+
+委託你的人，可能才是這件事的起點。`,
+    choices: {
+      A: { text: "立刻回去質問 Aldus", next: "s4c" },
+      B: { text: "先找到助理再說", next: "s4a" },
+      C: { text: "問獵人：觀察者現在還在這一帶嗎", next: "s4b" }
+    }
+  },
+
+  s3d: {
+    幕: 3,
+    text: `天完全黑了之後，你從廢墟西側一處舊窗洞鑽進去。
+
+裡面比外面更靜。你靠著牆移動，聽見呼吸聲從地下傳上來。`,
+    choices: {
+      A: { text: "循著聲音找到地下室入口", next: "s4a" },
+      B: { text: "先確認退路再行動", next: "s4b" },
+      C: { text: "製造聲響，讓對方知道有人進來了", next: "s4b" }
+    }
+  },
+
+  s3e: {
+    幕: 3,
+    text: `白天，你走向廢墟外圍，直接走向那兩個人。
+
+「你們在等什麼人？」
+
+其中一個轉過來，打量你：「路過的。你呢？」
+
+「找人。」你說，「一個逃跑的助理。」
+
+兩人互看了一眼。這句話讓他們的態度變了——你知道的比他們預期的多。`,
+    choices: {
+      A: { text: "「我知道你們是觀察者。我們可以談。」", next: "s4b" },
+      B: { text: "「你們的委託人是 Aldus，對吧。」", next: "s4c" },
+      C: { text: "保持沉默，等他們先說", next: "s4b" }
+    }
+  },
+
+  s4a: {
+    幕: 4,
+    text: `你找到了助理。
+
+他縮在地下室角落，手握著一塊碎石，看見你時整個人塌下來。
+
+「我在帳目裡發現了異常。Aldus 把收入拆成三份報給不同的人——有人在查他，我不小心知道了太多。」
+
+你們往出口移動。快到缺口時，腳步聲停了。
+
+兩個輪廓出現在缺口兩側——不是你預期的位置。`,
+    choices: {
+      A: { text: "直接衝出去，用速度破局", next: "s5_action" },
+      B: { text: "退回廢墟，找另一個出口", next: "s5_retreat" },
+      C: { text: "停下來，開口談", next: "s5_talk" }
+    }
+  },
+
+  s4b: {
+    幕: 4,
+    text: `情報拼湊完整了。
+
+觀察者受某個商業派系委託，追查 Aldus 的帳目問題。助理是無辜的中間人——他逃跑是因為誤以為 Aldus 雇人來滅口。
+
+廢墟裡的助理不知道，追他的人想要的是帳目，不是他的命。
+
+你走向廢墟，這次心裡清楚得多。`,
+    choices: {
+      A: { text: "直接進廢墟帶助理出來", next: "s5_action" },
+      B: { text: "先跟廢墟外的人交涉", next: "s5_talk" },
+      C: { text: "讓助理自己出來，你在外面確保安全", next: "s5_retreat" }
+    }
+  },
+
+  s4c: {
+    幕: 4,
+    text: `你找到了 Aldus。
+
+他聽完你說的，沉默了很長一段時間。
+
+「我不是要傷害他。」他說。「我只是不想讓那份帳目流出去。那些錢的去向，牽涉到不只是我。」
+
+他抬起眼：「如果你能把帳目拿回來，我可以讓那些人停下來。」
+
+你看著他。這個人說的可能是真話，也可能是拖延。`,
+    choices: {
+      A: { text: "相信他，先去找帳目", next: "s5_talk" },
+      B: { text: "不信任他，先救人再說", next: "s5_action" },
+      C: { text: "要求他親自來廢墟收拾這件事", next: "s5_talk" }
+    }
+  },
+
+  s5_action: {
+    幕: 5,
+    text: `你選擇了最直接的方式。
+
+廢墟外的兩個人反應過來時，你已經帶著助理穿過了缺口。其中一個追上來，被你擋住，推開，沒有再追。
+
+離開廢墟之後，助理說：「謝謝你。」
+
+停頓了一下：「帳目還在我身上。你知道要交給誰嗎？」
+
+你握著那本帳冊，想著接下來的路。`,
+    choices: null,
+    ending: "action"
+  },
+
+  s5_talk: {
+    幕: 5,
+    text: `你舉起手，慢慢地。
+
+「你們找的不是他。是帳目。」
+
+兩個輪廓沒有動。
+
+「Aldus 把收入拆成三份，報給三個不同的人。你們是其中一個委託方——但另外兩份的線索，只有助理知道在哪。」
+
+更長的沉默。
+
+兩個人互看了一眼。「走吧。」他們讓開了缺口。
+
+出了廢墟，助理問：「你剛才說的線索——是真的嗎？」
+
+你沒有立刻回答。`,
+    choices: null,
+    ending: "talk"
+  },
+
+  s5_retreat: {
+    幕: 5,
+    text: `你帶著助理退回廢墟深處，繞了一大圈，找到南側一個被植物遮住的缺口。
+
+等外圍的人反應過來，你們已經到了安全距離。
+
+助理喘著氣：「你知道一條我不知道的路。」
+
+「我沒有。」你說。「只是他們也不知道。」
+
+帳目在助理的包裡。接下來那份東西要交到哪裡，還沒有答案。`,
+    choices: null,
+    ending: "retreat"
+  }
+};
+
+// ── 稱號計算 ─────────────────────────────────────────────────
+
+function calcTitles(alignCount, divergeCount, divergeAtKey) {
+  const total = alignCount + divergeCount;
+  const ratio = total > 0 ? alignCount / total : 0;
+
+  let pTitle, pDesc, aTitle, aDesc;
+
+  if (ratio >= 0.8) {
+    pTitle = "與夥伴同行的人";
+    pDesc = "每一步都選擇了相同的方向。信任，或是默契——結果一樣。";
+  } else if (ratio <= 0.3) {
+    pTitle = "走自己路的人";
+    pDesc = "和夥伴的判斷幾乎每次都不同。你有你自己的理由。";
+  } else if (divergeAtKey) {
+    pTitle = "自有判斷的人";
+    pDesc = "多數時候同行，但在關鍵時刻選擇了不同的路。你聽，但你自己決定。";
+  } else {
+    pTitle = "謹慎的同行者";
+    pDesc = "在平穩的路上與夥伴一致，在關鍵處跟隨直覺。";
+  }
+
+  if (ratio >= 0.8) {
+    aTitle = "可靠的夥伴";
+    aDesc = "判斷始終與你一致，從未讓你單獨面對決定。";
+  } else if (divergeAtKey) {
+    aTitle = "看得更遠的那個";
+    aDesc = "在關鍵時刻提出了不同的建議，那些建議有自己的道理。";
+  } else {
+    aTitle = "有自己立場的夥伴";
+    aDesc = "不總是同意你，但始終在旁邊。";
+  }
+
+  return { pTitle, pDesc, aTitle, aDesc };
+}
+
+// ── 遊戲狀態 ─────────────────────────────────────────────────
+
+let G = {
+  playerName: "", aiName: "",
+  playerStats: {}, aiStats: {},
+  playerPoints: 0, aiPoints: 0,
+  currentScene: "s1",
+  alignCount: 0, divergeCount: 0, divergeAtKey: false
+};
+
+// ── 擲骰子 ───────────────────────────────────────────────────
+
+function rollDice() {
+  const pName = document.getElementById("player-name").value.trim();
+  const aName = document.getElementById("ai-name").value.trim();
+  if (!pName || !aName) { alert("請先輸入名字"); return; }
+
+  const btn = document.getElementById("dice-btn");
+  btn.disabled = true;
+
+  // 隨機 10–15 點
+  const pPts = Math.floor(Math.random() * 6) + 10;
+  const aPts = Math.floor(Math.random() * 6) + 10;
+  G.playerPoints = pPts;
+  G.aiPoints = aPts;
+
+  // 骰子滾動動畫
+  const result = document.getElementById("dice-result");
+  let ticks = 0;
+  const interval = setInterval(() => {
+    const r1 = Math.floor(Math.random() * 6) + 10;
+    const r2 = Math.floor(Math.random() * 6) + 10;
+    result.innerHTML = `<span class="rolled">${r1}　${r2}</span>`;
+    ticks++;
+    if (ticks >= 12) {
+      clearInterval(interval);
+      result.innerHTML =
+        `<div class="rolled">${pPts}　${aPts}</div>` +
+        `<div class="pts">${pName} 獲得 ${pPts} 點　　${aName} 獲得 ${aPts} 點</div>`;
+      setTimeout(() => {
+        document.getElementById("setup-page1").style.display = "none";
+        document.getElementById("setup-page2").style.display = "block";
+        document.getElementById("p-remain").innerHTML = `剩餘可分配：<span>${pPts}</span> 點`;
+        document.getElementById("a-remain").innerHTML = `剩餘可分配：<span>${aPts}</span> 點`;
+        document.getElementById("p-stat-label").textContent = `${pName} 的能力值（共 ${pPts} 點）`;
+        document.getElementById("a-stat-label").textContent = `${aName} 的能力值（共 ${aPts} 點）`;
+        ["s-p1","s-p2","s-p3","s-a1","s-a2","s-a3"].forEach(id => {
+          document.getElementById(id).value = 0;
+        });
+      }, 600);
+    }
+  }, 80);
+}
+
+function checkPoints() {
+  const pUsed = ["s-p1","s-p2","s-p3"].reduce((s,id) => s + (+document.getElementById(id).value || 0), 0);
+  const aUsed = ["s-a1","s-a2","s-a3"].reduce((s,id) => s + (+document.getElementById(id).value || 0), 0);
+  const pLeft = G.playerPoints - pUsed;
+  const aLeft = G.aiPoints - aUsed;
+
+  document.getElementById("p-remain").innerHTML = `剩餘可分配：<span>${pLeft}</span> 點`;
+  document.getElementById("a-remain").innerHTML = `剩餘可分配：<span>${aLeft}</span> 點`;
+
+  const ok = pLeft === 0 && aLeft === 0;
+  document.getElementById("start-btn").disabled = !ok;
+}
+
+// ── 流程 ─────────────────────────────────────────────────────
+
+function startGame() {
+  const pName = document.getElementById("player-name").value.trim();
+  const aName = document.getElementById("ai-name").value.trim();
+  if (!pName || !aName) { alert("請輸入名字"); return; }
+
+  G.playerName = pName;
+  G.aiName = aName;
+  G.playerStats = {
+    體力: +document.getElementById("s-p1").value,
+    智力: +document.getElementById("s-p2").value,
+    武力: +document.getElementById("s-p3").value
+  };
+  G.aiStats = {
+    智力: +document.getElementById("s-a1").value,
+    耐力: +document.getElementById("s-a2").value,
+    決策力: +document.getElementById("s-a3").value
+  };
+  G.currentScene = "s1";
+  G.alignCount = 0; G.divergeCount = 0; G.divergeAtKey = false;
+
+  document.getElementById("setup-screen").style.display = "none";
+  document.getElementById("game-screen").style.display = "block";
+  document.getElementById("player-label").textContent = pName + "：";
+  document.getElementById("ai-label").textContent = aName + "：";
+
+  // 數值列
+  const ps = G.playerStats, as = G.aiStats;
+  document.getElementById("stats-bar").innerHTML =
+    `<div class="char-stats"><span class="char-name">${pName}</span>` +
+    Object.entries(ps).map(([k,v]) => `<span>${k}:${v}</span>`).join("") + `</div>` +
+    `<div class="char-stats"><span class="char-name">${aName}</span>` +
+    Object.entries(as).map(([k,v]) => `<span>${k}:${v}</span>`).join("") + `</div>`;
+
+  renderScene("s1");
+}
+
+function renderScene(id) {
+  const scene = SCENES[id];
+  G.currentScene = id;
+
+  document.getElementById("progress-text").textContent = `幕 ${scene.幕} / 5`;
+  document.getElementById("scene-text").innerHTML = scene.text.replace(/\n/g, "<br>");
+
+  const choicesDiv = document.getElementById("choices");
+  if (scene.choices) {
+    choicesDiv.innerHTML = Object.entries(scene.choices)
+      .map(([k, v]) => `<div class="choice-item"><span>${k}.</span>${v.text}</div>`).join("");
+  } else {
+    choicesDiv.innerHTML = "";
+  }
+
+  const pSel = document.getElementById("player-select");
+  const aSel = document.getElementById("ai-select");
+  pSel.value = "";
+  aSel.value = "";
+  pSel.disabled = false;
+  aSel.disabled = true;
+  pSel.onchange = () => { if (pSel.value) showConfirm("player", pSel.value); };
+  aSel.onchange = () => { if (aSel.value) showConfirm("ai", aSel.value); };
+  document.getElementById("confirm-bar").classList.remove("visible");
+  document.getElementById("feedback").textContent = "";
+  document.getElementById("feedback").className = "feedback";
+
+  const bar = document.getElementById("input-bar");
+  if (!scene.choices) {
+    bar.style.display = "none";
+    setTimeout(showEnding, 1800);
+  } else {
+    bar.style.display = "flex";
+  }
+}
+
+let pendingConfirm = null; // { who: "player"|"ai", choice: "A"|"B"|"C" }
+
+function showConfirm(who, choice) {
+  pendingConfirm = { who, choice };
+  const scene = SCENES[G.currentScene];
+  const isFirst = scene.幕 === 1 && who === "player";
+  const name = who === "player" ? G.playerName : G.aiName;
+  const bar = document.getElementById("confirm-bar");
+  const msg = document.getElementById("confirm-msg");
+
+  let html = "";
+  if (isFirst) {
+    html += `<div class="warn">⚠ 注意：選項一旦確認後就無法更改</div>`;
+  }
+  html += `${name} 選擇了 <strong style="color:#fff">${choice}</strong>，確認嗎？`;
+  msg.innerHTML = html;
+  bar.classList.add("visible");
+}
+
+function confirmChoice() {
+  if (!pendingConfirm) return;
+  const { who, choice } = pendingConfirm;
+  pendingConfirm = null;
+
+  document.getElementById("confirm-bar").classList.remove("visible");
+
+  if (who === "player") {
+    const pSel = document.getElementById("player-select");
+    pSel.value = choice;
+    pSel.disabled = true;
+    const aSel = document.getElementById("ai-select");
+    aSel.disabled = false;
+  } else {
+    const aSel = document.getElementById("ai-select");
+    aSel.value = choice;
+    aSel.disabled = true;
+    submitChoice();
+  }
+}
+
+function cancelChoice() {
+  if (!pendingConfirm) return;
+  const { who } = pendingConfirm;
+  pendingConfirm = null;
+  document.getElementById("confirm-bar").classList.remove("visible");
+  if (who === "player") {
+    document.getElementById("player-select").value = "";
+  } else {
+    document.getElementById("ai-select").value = "";
+    document.getElementById("ai-select").disabled = false;
+  }
+}
+
+function copyScene() {
+  const scene = SCENES[G.currentScene];
+  const ps = G.playerStats, as = G.aiStats;
+  const charBlock =
+    `【角色】\n` +
+    `${G.playerName}　` + Object.entries(ps).map(([k,v]) => `${k}:${v}`).join("　") + `\n` +
+    `${G.aiName}　` + Object.entries(as).map(([k,v]) => `${k}:${v}`).join("　") + `\n` +
+    `【幕 ${scene.幕} / 5】\n\n`;
+  const choiceText = scene.choices
+    ? "\n\n" + Object.entries(scene.choices).map(([k,v]) => `${k}. ${v.text}`).join("\n")
+    : "";
+  navigator.clipboard.writeText(charBlock + scene.text + choiceText).then(() => {
+    const btn = document.getElementById("copy-btn");
+    btn.textContent = "已複製";
+    btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = "複製"; btn.classList.remove("copied"); }, 2000);
+  });
+}
+
+function submitChoice() {
+  const pChoice = document.getElementById("player-select").value;
+  const aChoice = document.getElementById("ai-select").value;
+  if (!pChoice || !aChoice) return;
+
+  const scene = SCENES[G.currentScene];
+  const aligned = pChoice === aChoice;
+  const fb = document.getElementById("feedback");
+
+  if (aligned) {
+    G.alignCount++;
+    fb.textContent = "一致 ★";
+    fb.className = "feedback align";
+  } else {
+    G.divergeCount++;
+    if (scene.幕 >= 4) G.divergeAtKey = true;
+    fb.textContent = `分歧　${G.playerName}:${pChoice}　${G.aiName}:${aChoice}`;
+    fb.className = "feedback diverge";
+  }
+
+  const next = scene.choices[pChoice].next;
+  setTimeout(() => renderScene(next), 1200);
+}
+
+function showEnding() {
+  document.getElementById("game-screen").style.display = "none";
+  const end = document.getElementById("end-screen");
+  end.style.display = "block";
+
+  const total = G.alignCount + G.divergeCount;
+  document.getElementById("stats-summary").innerHTML =
+    `一致 <span>${G.alignCount}</span> 次　　分歧 <span>${G.divergeCount}</span> 次　　共 <span>${total}</span> 幕`;
+
+  const { pTitle, pDesc, aTitle, aDesc } = calcTitles(G.alignCount, G.divergeCount, G.divergeAtKey);
+  document.getElementById("awards").innerHTML =
+    `<div class="award">
+       <div class="award-name">${G.playerName} 的稱號</div>
+       <div class="award-title">「${pTitle}」</div>
+       <div class="award-desc">${pDesc}</div>
+     </div>
+     <hr class="divider-line">
+     <div class="award">
+       <div class="award-name">${G.aiName} 的稱號</div>
+       <div class="award-title">「${aTitle}」</div>
+       <div class="award-desc">${aDesc}</div>
+     </div>`;
+}
+
+function restartGame() {
+  document.getElementById("end-screen").style.display = "none";
+  document.getElementById("setup-screen").style.display = "block";
+  document.getElementById("setup-page1").style.display = "block";
+  document.getElementById("setup-page2").style.display = "none";
+  document.getElementById("dice-btn").disabled = false;
+  document.getElementById("dice-result").innerHTML = "";
+  G = { playerName:"", aiName:"", playerStats:{}, aiStats:{},
+        playerPoints:0, aiPoints:0,
+        currentScene:"s1", alignCount:0, divergeCount:0, divergeAtKey:false };
+}
+</script>
+</body>
+</html>
