@@ -322,6 +322,29 @@
       width: 60%;
     }
 
+    /* 說明頁 */
+    #intro-screen { border: 1px solid #444; padding: 40px; }
+    .intro-section { margin-bottom: 24px; }
+    .intro-section h3 { color: #fff; font-size: 13px; letter-spacing: 2px; margin-bottom: 10px; }
+    .intro-section p { color: #888; font-size: 13px; line-height: 1.9; }
+    .intro-section .highlight { color: #ccc; }
+    .intro-step { display: flex; gap: 12px; margin-bottom: 8px; font-size: 13px; color: #888; }
+    .intro-step .num { color: #555; min-width: 20px; }
+    .intro-note { border: 1px solid #222; padding: 12px 16px; margin-top: 20px; font-size: 12px; color: #666; line-height: 1.8; }
+    .help-btn {
+      position: absolute;
+      top: 10px;
+      right: 46px;
+      background: #000;
+      border: 1px solid #444;
+      color: #666;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+    }
+    .help-btn:hover { border-color: #888; color: #aaa; }
+
     .restart-btn {
       margin-top: 30px;
       background: #000;
@@ -339,8 +362,41 @@
 <body>
 <div id="app">
 
+  <!-- 說明頁 -->
+  <div id="intro-screen">
+    <div class="title">◆ RPG ADVENTURE ◆</div>
+
+    <div class="intro-section">
+      <h3>── 這是什麼遊戲？</h3>
+      <p>一款<span class="highlight">文字冒險遊戲</span>，你和你的 AI 各自做出選擇，一起面對故事中的每個關鍵時刻。<br>
+      你們的選擇是否一致，以及你如何回應 AI 的建議，將在最後決定你們各自的稱號。</p>
+    </div>
+
+    <div class="intro-section">
+      <h3>── 如何進行？</h3>
+      <div class="intro-step"><span class="num">1.</span><span>輸入你/妳的名字與 AI 的名字，選擇世界觀，擲骰子獲得能力點數並自由分配。</span></div>
+      <div class="intro-step"><span class="num">2.</span><span>每一幕會出現場景描述和三個選項。點右上角的 <span class="highlight">複製</span> 按鈕，把場景內容貼給你的 AI。</span></div>
+      <div class="intro-step"><span class="num">3.</span><span>AI 讀完場景後會給出牠的建議選項，填入 <span class="highlight">AI 欄位</span>。你再填入自己的選擇。</span></div>
+      <div class="intro-step"><span class="num">4.</span><span>選項確認後無法更改。你們的選擇會被記錄——一致或分歧，都有意義。</span></div>
+      <div class="intro-step"><span class="num">5.</span><span>五幕結束後，根據你們整局的互動模式，各自獲得稱號。</span></div>
+    </div>
+
+    <div class="intro-section">
+      <h3>── 能力值有什麼用？</h3>
+      <p>能力值影響某些選擇的結果——數值不足的路線可能通向失敗分支，而非直接成功。<br>
+      選項本身不會顯示數值要求，<span class="highlight">憑感覺和故事判斷就好</span>。</p>
+    </div>
+
+    <div class="intro-note">
+      沒有 AI 也能玩：直接把 AI 欄位填你自己的第二直覺。<br>
+      有 AI 時：複製場景內容貼給 ChatGPT、Claude、Gemini 或任何你喜歡的 AI，讓牠給出建議。
+    </div>
+
+    <button class="start-btn" onclick="showSetup()">▶ 開始設定</button>
+  </div>
+
   <!-- 開始畫面 -->
-  <div id="setup-screen">
+  <div id="setup-screen" style="display:none">
     <div class="title">◆ RPG ADVENTURE ◆</div>
 
     <!-- 第一頁：輸入名字 + 擲骰子 -->
@@ -397,6 +453,7 @@
     </div>
     <div class="stats-bar" id="stats-bar"></div>
     <div class="scene-box">
+      <button class="help-btn" onclick="showIntro()">？</button>
       <button class="copy-btn" id="copy-btn" onclick="copyScene()">複製</button>
       <div class="scene-text" id="scene-text"></div>
       <hr class="divider">
@@ -1146,6 +1203,16 @@ let G = {
   currentScene: "s1",
   alignCount: 0, divergeCount: 0, divergeAtKey: false
 };
+
+function showSetup() {
+  document.getElementById("intro-screen").style.display = "none";
+  document.getElementById("setup-screen").style.display = "block";
+}
+
+function showIntro() {
+  document.getElementById("game-screen").style.display = "none";
+  document.getElementById("intro-screen").style.display = "block";
+}
 
 function selectWorld(w) {
   G.world = w;
