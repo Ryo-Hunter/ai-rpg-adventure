@@ -478,6 +478,7 @@
         </select>
       </div>
       <button class="submit-btn" id="submit-btn" style="display:none" onclick="submitChoice()">送出</button>
+      <button class="submit-btn" id="ending-btn" style="display:none" onclick="showEnding()">◆ 進入結局</button>
     </div>
     <div class="confirm-bar" id="confirm-bar">
       <div class="msg" id="confirm-msg"></div>
@@ -1345,10 +1346,16 @@ function renderScene(id) {
   document.getElementById("feedback").className = "feedback";
 
   const bar = document.getElementById("input-bar");
+  const endingBtn = document.getElementById("ending-btn");
   if (!scene.choices) {
-    bar.style.display = "none";
-    setTimeout(showEnding, 1800);
+    document.getElementById("player-select").closest(".select-group").style.display = "none";
+    document.getElementById("ai-select").closest(".select-group").style.display = "none";
+    endingBtn.style.display = "inline-block";
+    bar.style.display = "flex";
   } else {
+    document.getElementById("player-select").closest(".select-group").style.display = "";
+    document.getElementById("ai-select").closest(".select-group").style.display = "";
+    endingBtn.style.display = "none";
     bar.style.display = "flex";
   }
 }
