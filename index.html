@@ -665,9 +665,10 @@ async function generateScene() {
       })
     });
 
-    if (!res.ok) throw new Error("API error " + res.status);
     const data = await res.json();
-    if (data.error) throw new Error(data.error);
+    if (!res.ok || data.error) {
+      throw new Error(data.error || ("API error " + res.status));
+    }
 
     G.currentSceneData = data;
     renderSceneData(data);
