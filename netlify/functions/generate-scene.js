@@ -71,7 +71,7 @@ ${historyText}
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.8, maxOutputTokens: 512 }
+        generationConfig: { temperature: 0.8, maxOutputTokens: 1024 }
       })
     });
 
@@ -80,10 +80,11 @@ ${historyText}
       return { statusCode: 500, body: JSON.stringify({ error: data.error.message || JSON.stringify(data.error) }) };
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      return { statusCode: 500, body: JSON.stringify({ error: "無法解析場景 JSON: " + text.slice(0, 200) }) };
+      return { statusCode: 500, body: JSON.stringify({ error: "無法解析場景 JSON: " + raw.slice(0, 200) }) };
     }
 
     const scene = JSON.parse(jsonMatch[0]);
