@@ -1,4 +1,16 @@
 exports.handler = async (event) => {
+  try {
+    return await _handler(event);
+  } catch (e) {
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "未捕獲錯誤: " + e.message, stack: e.stack })
+    };
+  }
+};
+
+async function _handler(event) {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
