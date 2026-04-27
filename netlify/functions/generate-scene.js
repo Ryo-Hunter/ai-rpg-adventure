@@ -58,7 +58,7 @@ ${historyText}
     generationConfig: { temperature: 0.8, maxOutputTokens: 512 }
   });
 
-  const model = "gemini-2.0-flash";
+  const model = "gemini-2.5-flash-preview-04-17";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
   return new Promise((resolve) => {
@@ -71,9 +71,10 @@ ${historyText}
       res.on("end", () => {
         try {
           const parsed = JSON.parse(data);
+          if (parsed.error) throw new Error(parsed.error.message || JSON.stringify(parsed.error));
           const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
           const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) throw new Error("無法解析場景 JSON");
+          if (!jsonMatch) throw new Error("無法解析場景 JSON: " + text.slice(0, 200));
           const scene = JSON.parse(jsonMatch[0]);
           resolve({
             statusCode: 200,
