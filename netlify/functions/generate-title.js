@@ -48,7 +48,7 @@ ${historyText}
     generationConfig: { temperature: 0.9, maxOutputTokens: 400 }
   });
 
-  const model = "gemini-2.5-flash-preview-04-17";
+  const model = "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
   return new Promise((resolve) => {
