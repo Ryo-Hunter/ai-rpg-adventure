@@ -1,5 +1,3 @@
-const https = require("https");
-
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -19,15 +17,18 @@ exports.handler = async (event) => {
   }
 
   const worldNames = { fantasy: "奇幻", modern: "現代", scifi: "科幻" };
+  const playerStatsText = Object.entries(playerStats).map(([k,v]) => `${k}:${v}`).join(' ');
+  const aiStatsText = Object.entries(aiStats).map(([k,v]) => `${k}:${v}`).join(' ');
+
   const historyText = history.map((h, i) =>
-    `第${i + 1}幕：${playerName}選${h.player}，${aiName}選${h.ai}（一致：${h.player === h.ai ? "是" : "否"}）`
+    `第${i+1}幕：${playerName}選${h.player}，${aiName}選${h.ai}（一致：${h.player === h.ai ? "是" : "否"}）`
   ).join("\n");
 
   const prompt = `你是一個文字冒險遊戲的結局分析引擎。請用「${language}」語言生成稱號和評語。
 
 【世界觀】${worldNames[world] || world}
-【玩家】${playerName}（${Object.entries(playerStats).map(([k,v]) => `${k}:${v}`).join(' ')}）
-【AI夥伴】${aiName}（${Object.entries(aiStats).map(([k,v]) => `${k}:${v}`).join(' ')}）
+【玩家】${playerName}（${playerStatsText}）
+【AI夥伴】${aiName}（${aiStatsText}）
 【選擇歷程】
 ${historyText}
 【統計】一致 ${alignCount} 次，分歧 ${divergeCount} 次
@@ -43,40 +44,36 @@ ${historyText}
 
 只回傳 JSON，不要其他說明。`;
 
-  const requestBody = JSON.stringify({
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.9, maxOutputTokens: 400 }
-  });
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
 
-  const model = "gemini-2.5-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
-
-  return new Promise((resolve) => {
-    const req = https.request(url, {
+  try {
+    const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
-    }, (res) => {
-      let data = "";
-      res.on("data", (chunk) => data += chunk);
-      res.on("end", () => {
-        try {
-          const parsed = JSON.parse(data);
-          const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
-          const jsonMatch = text.match(/\{[\s\S]*\}/);
-          if (!jsonMatch) throw new Error("無法解析稱號 JSON");
-          const result = JSON.parse(jsonMatch[0]);
-          resolve({
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(result)
-          });
-        } catch (e) {
-          resolve({ statusCode: 500, body: JSON.stringify({ error: e.message }) });
-        }
-      });
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.9, maxOutputTokens: 400 }
+      })
     });
-    req.on("error", (e) => resolve({ statusCode: 500, body: JSON.stringify({ error: e.message }) }));
-    req.write(requestBody);
-    req.end();
-  });
+
+    const data = await res.json();
+    if (data.error) {
+      return { statusCode: 500, body: JSON.stringify({ error: data.error.message || JSON.stringify(data.error) }) };
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { statusCode: 500, body: JSON.stringify({ error: "無法解析稱號 JSON: " + text.slice(0, 200) }) };
+    }
+
+    const result = JSON.parse(jsonMatch[0]);
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result)
+    };
+  } catch (e) {
+    return { statusCode: 500, body: JSON.stringify({ error: e.message }) };
+  }
 };
