@@ -436,9 +436,9 @@
         <div class="points-remaining" id="a-remain"></div>
         <div class="stat-label" id="a-stat-label">夥伴能力值</div>
         <div class="stat-inputs">
-          <div class="stat-item"><label>智力</label><input type="number" id="s-a1" min="0" max="15" value="0" oninput="checkPoints()"></div>
-          <div class="stat-item"><label>耐力</label><input type="number" id="s-a2" min="0" max="15" value="0" oninput="checkPoints()"></div>
-          <div class="stat-item"><label>決策力</label><input type="number" id="s-a3" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>洞察力</label><input type="number" id="s-a1" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>共感力</label><input type="number" id="s-a2" min="0" max="15" value="0" oninput="checkPoints()"></div>
+          <div class="stat-item"><label>預測力</label><input type="number" id="s-a3" min="0" max="15" value="0" oninput="checkPoints()"></div>
         </div>
       </div>
       <button class="start-btn" id="start-btn" onclick="startGame()" disabled>▶ 開始冒險</button>
@@ -621,9 +621,9 @@ function startGame() {
     "武力": +document.getElementById("s-p3").value
   };
   G.aiStats = {
-    "智力": +document.getElementById("s-a1").value,
-    "耐力": +document.getElementById("s-a2").value,
-    "決策力": +document.getElementById("s-a3").value
+    "洞察力": +document.getElementById("s-a1").value,
+    "共感力": +document.getElementById("s-a2").value,
+    "預測力": +document.getElementById("s-a3").value
   };
   G.act = 1;
   G.history = [];

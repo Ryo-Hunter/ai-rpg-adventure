@@ -26,8 +26,8 @@ exports.handler = async (event) => {
   const prompt = `你是一個文字冒險遊戲的結局分析引擎。請用「${language}」語言生成稱號和評語。
 
 【世界觀】${worldNames[world] || world}
-【玩家】${playerName}（體力:${playerStats.hp} 智力:${playerStats.int} 武力:${playerStats.atk}）
-【AI夥伴】${aiName}（智力:${aiStats.int} 耐力:${aiStats.end} 決策力:${aiStats.dec}）
+【玩家】${playerName}（${Object.entries(playerStats).map(([k,v]) => `${k}:${v}`).join(' ')}）
+【AI夥伴】${aiName}（${Object.entries(aiStats).map(([k,v]) => `${k}:${v}`).join(' ')}）
 【選擇歷程】
 ${historyText}
 【統計】一致 ${alignCount} 次，分歧 ${divergeCount} 次

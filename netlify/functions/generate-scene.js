@@ -32,8 +32,8 @@ exports.handler = async (event) => {
 【世界觀】${worldLabel}
 【幕數】第 ${act} 幕 / 共 5 幕
 【角色】
-- 玩家：${playerName}（體力:${playerStats.hp} 智力:${playerStats.int} 武力:${playerStats.atk}）
-- AI夥伴：${aiName}（智力:${aiStats.int} 耐力:${aiStats.end} 決策力:${aiStats.dec}）
+- 玩家：${playerName}（${Object.entries(playerStats).map(([k,v]) => `${k}:${v}`).join(' ')}）
+- AI夥伴：${aiName}（${Object.entries(aiStats).map(([k,v]) => `${k}:${v}`).join(' ')}）
 【選擇歷史】
 ${historyText}
 
